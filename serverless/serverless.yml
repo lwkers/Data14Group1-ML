@@ -1,0 +1,63 @@
+service: ${env:APPLICATION}
+frameworkVersion: '4'
+
+useDotenv: true
+variablesResolutionMode: 20210326
+
+plugins:
+  - serverless-python-requirements
+  - serverless-dotenv-plugin
+  - serverless-prune-plugin
+custom:
+  pythonRequirements:
+    dockerizePip: false
+  dotenv:
+    include:
+      - TZ_LOCAL
+
+provider:
+  name: aws
+  runtime: ${env:PYTHON_VERSION}  
+  memorySize: 256   # (default value) Specifies the amount of memory available to the Lambda function
+  timeout: 300      # (default value) Specifies the maximum time, in seconds, that a Lambda function can run before timing out. 
+  deploymentBucket:
+    name: ${env:DEPLOYMENT_BUCKET}
+    maxPreviousDeploymentArtifacts: 3
+  endpointType: REGIONAL
+  region: ${env:REGION}
+  versionFunctions: true
+  profile: ${env:AWS_PROFILE}
+
+  # you can define service wide environment variables here
+  environment:
+
+# Add packaging information here
+package:
+  exclude:
+    - __cache__/**
+    - __pycache__/**
+    - node_modules/**
+    - 'package.json'
+    - 'package-lock.json'
+
+# Specify lambda functions here 
+functions:
+  UserProducts2Web:
+    handler: functions/UserProducts2Web/handler.lambda_handler
+    role: arn:aws:iam::339713004220:role/LambdaWebApiRole  # Speficy the existing role on AWS
+    timeout: 15  # request timeout in seconds
+    events:
+      - http:
+          path: UserProducts2Web
+          method: post
+          cors: true
+  
+  UserProductProbability2Web:
+    handler: functions/UserProductProbability2Web/handler.lambda_handler
+    role: arn:aws:iam::339713004220:role/LambdaWebApiRole  # Speficy the existing role on AWS
+    timeout: 15  # request timeout in seconds
+    events:
+      - http:
+          path: UserProductProbability2Web
+          method: post
+          cors: true
